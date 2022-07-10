@@ -15,6 +15,15 @@ var cmdr = project
 
 version '0.0.1'
 
+// stdio implementations
+project('stdio') {
+    apply plugin: 'java-library'
+    apply plugin: 'application'
+    version '0.0.1'
+
+    mainClassName = 'org.comroid.cmdr.stdio.IOCmdr'
+}
+
 // spigot implementations
 project('spigot') {
     apply plugin: 'java-library'
