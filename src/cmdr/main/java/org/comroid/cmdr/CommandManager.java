@@ -123,9 +123,10 @@ public class CommandManager implements Cmdr {
     private Object runCommand(CommandBlob commandBlob, String[] args, Object[] extraArgs) {
         final List<Object> pArgs = new ArrayList<>();
         final List<CommandParameter<?>> params = commandBlob.getParameters();
-        long n;
-        if ((n = params.stream().filter(x -> x.required).count()) < args.length)
-            throw new CommandException("Invalid argument count " + args.length + "; expected " + n);
+        long required = params.stream().filter(x -> x.required).count();
+        int argCount = args.length + extraArgs.length;
+        if (required > argCount)
+            throw new CommandException("Invalid argument count " + argCount + "; expected " + required);
         for (int i = 0; i < args.length; i++)
             pArgs.add(StandardValueType.STRING.convert(args[i], params.get(i).type));
         return commandBlob.getDelegate().autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)));
