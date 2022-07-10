@@ -5,21 +5,22 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public interface Cmdr {
-    Set<CommandBlob> registerCommand(Class<?> cls);
+    Set<CommandBlob> registerCommands(Class<?>... cls);
 
     Map<String, CommandBlob> getCommands();
 
     Stream<Object> getExtraArguments();
 
     Object handleThrowable(Throwable t);
-    void handleResponse(Object o);
+
+    void handleResponse(Object o, Object[] extraArgs);
 
     interface Underlying extends Cmdr {
         Cmdr getUnderlyingCmdr();
 
         @Override
-        default Set<CommandBlob> registerCommand(Class<?> cls) {
-            return getUnderlyingCmdr().registerCommand(cls);
+        default Set<CommandBlob> registerCommands(Class<?>... cls) {
+            return getUnderlyingCmdr().registerCommands(cls);
         }
 
         @Override
@@ -38,8 +39,8 @@ public interface Cmdr {
         }
 
         @Override
-        default void handleResponse(Object o) {
-            getUnderlyingCmdr().handleResponse(o);
+        default void handleResponse(Object o, Object[] extraArgs) {
+            getUnderlyingCmdr().handleResponse(o, extraArgs);
         }
     }
 }

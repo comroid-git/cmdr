@@ -8,7 +8,6 @@ import org.comroid.cmdr.model.Command;
 import org.comroid.cmdr.model.CommandBlob;
 import org.comroid.cmdr.model.CommandParameter;
 import org.comroid.util.Bitmask;
-import org.comroid.util.FallbackUtil;
 import org.comroid.util.StandardValueType;
 
 import java.lang.reflect.Method;
@@ -20,7 +19,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.comroid.util.FallbackUtil.*;
+import static org.comroid.util.FallbackUtil.fallback;
 
 public class CommandManager implements Cmdr {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
@@ -28,7 +27,7 @@ public class CommandManager implements Cmdr {
     protected final Map<String, CommandBlob> cmds = new ConcurrentHashMap<>();
 
     @Override
-    public final Set<CommandBlob> registerCommand(Class<?> cls) {
+    public final Set<CommandBlob> registerCommands(Class<?>... cls) {
         return Stream.of(cls)
                 .map(this::buildCommandGroup)
                 .peek(cmd -> cmd.names().peek(key -> {
@@ -92,12 +91,43 @@ public class CommandManager implements Cmdr {
                 commandBlob.autoCompleteOptions(this, args, extraArgs).stream());
     }
 
-    public final Object runCommand(CommandBlob commandBlob, String[] args, Object[] extraArgs) {
+    public final boolean executeCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
+        Object response = null;
+        try {
+            response = stepIntoCommand(cmdParts, extraArgs);
+        } catch (Throwable t) {
+            response = cmdr.handleThrowable(t);
+            return false;
+        } finally {
+            cmdr.handleResponse(response, extraArgs);
+        }
+        return true;
+    }
+
+    private Object stepIntoCommand(String[] cmdParts, Object[] extraArgs) {
+        CommandBlob blob;
+        int[] i = new int[]{0};
+        blob = cmds.get(cmdParts[i[0]]);
+        while (cmdParts.length > ++i[0] && blob.getSubCommands()
+                .stream()
+                .flatMap(CommandBlob::names)
+                .anyMatch(x -> x.equals(cmdParts[i[0]])))
+            blob = blob.getSubCommands()
+                    .stream()
+                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[i[0]])))
+                    .findFirst()
+                    .orElseThrow(NoSuchElementException::new);
+        return runCommand(blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
+    }
+
+    private Object runCommand(CommandBlob commandBlob, String[] args, Object[] extraArgs) {
         final List<Object> pArgs = new ArrayList<>();
         final List<CommandParameter<?>> params = commandBlob.getParameters();
-        for (int i = 0; i < args.length; i++) {
-            pArgs.add(StandardValueType.STRING.convert(args[0], params.get(i).type));
-        }
+        long n;
+        if ((n = params.stream().filter(x -> x.required).count()) < args.length)
+            throw new CommandException("Invalid argument count " + args.length + "; expected " + n);
+        for (int i = 0; i < args.length; i++)
+            pArgs.add(StandardValueType.STRING.convert(args[i], params.get(i).type));
         return commandBlob.getDelegate().autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)));
     }
 
@@ -108,11 +138,11 @@ public class CommandManager implements Cmdr {
 
     @Override
     public Object handleThrowable(Throwable t) {
-        return String.format("%s: %s", t.getClass().getSimpleName(), t.getMessage());
+        throw new RuntimeException("Unhandled internal Exception", t);
     }
 
     @Override
-    public void handleResponse(Object o) {
-        log.at(Level.FINE).log("Unhandled response: {}", o);
+    public void handleResponse(Object o, Object[] extraArgs) {
+        log.at(Level.SEVERE).log("Unhandled response: {0}", o);
     }
 }
