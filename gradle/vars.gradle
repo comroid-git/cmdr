@@ -1,0 +1,14 @@
+import static java.lang.System.getenv
+
+ext {
+    artifactName = 'cmdr'
+    projectName = 'CMDR Command Pipeline'
+    projectDescription = 'Helper Library to assist with reflective command generation'
+
+    snapshot = project.version.endsWith("-SNAPSHOT")
+
+    sonatypeUsername = getenv("sonatypeUsername")
+    sonatypePassword = getenv("sonatypePassword")
+}
+
+ext."signing.password" = getenv("gpgKeyPassword")
