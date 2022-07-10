@@ -29,6 +29,9 @@ project('spigot') {
     apply plugin: 'java-library'
     version '0.0.1'
 
+    sourceCompatibility = 17
+    targetCompatibility = 17
+
     dependencies {
         compileOnly "org.spigotmc:spigot-api:$mcVersion-$spigotRC-SNAPSHOT"
     }
@@ -51,7 +54,7 @@ project('discord4j') {
     version '0.0.0'
 
     dependencies {
-        compileOnly 'com.discord4j:discord4j-core:3.2.+'
+        //compileOnly 'com.discord4j:discord4j-core:3.2.+'
         runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
         runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
     }
