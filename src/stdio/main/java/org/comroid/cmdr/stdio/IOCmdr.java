@@ -6,7 +6,6 @@ import org.comroid.cmdr.model.CommandBlob;
 
 import java.io.*;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -26,10 +25,10 @@ public class IOCmdr extends CommandManager implements Cmdr, Closeable {
         Set<Class<?>> classes = new HashSet<>();
         for (String clsName : extraClassNames)
             classes.add(Class.forName(clsName));
-        start(classes);
+        run(classes.toArray(new Class[0]));
     }
 
-    public static void start(Collection<Class<?>> classes) throws IOException {
+    public static void run(Class<?>... classes) throws IOException {
         try (IOCmdr cmdr = new IOCmdr(System.in, System.out)) {
             for (Class<?> extraClass : classes)
                 cmdr.registerCommands(extraClass);
@@ -48,14 +47,18 @@ public class IOCmdr extends CommandManager implements Cmdr, Closeable {
                 String input = in.readLine();
                 if ("exit".equals(input)) break;
                 String[] command = input.split(" ");
-                CommandBlob cmd = cmds.get(command[0]);
                 time = System.nanoTime();
-                Object response = cmd.evaluate(this, Arrays.copyOfRange(command, 1, command.length));
+                Object response = executeCommand(this, command, getExtraArguments().toArray());
                 time = System.nanoTime() - time;
                 print.write(response.toString());
                 print.write(" [" + TimeUnit.NANOSECONDS.toMillis(time) + "ms]\n");
             }
         }
+    }
+
+    @Override
+    public void handleResponse(Object o, Object[] extraArgs) {
+        print.write(String.valueOf(o));
     }
 
     @Override

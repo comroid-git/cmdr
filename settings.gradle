@@ -1,1 +1,10 @@
 rootProject.name = 'cmdr'
+
+include(':stdio')
+
+include(':spigot')
+
+include(':catnip')
+include(':discord4j')
+include(':javacord')
+include(':jda')
