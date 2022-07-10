@@ -4,48 +4,79 @@ buildscript {
 }
 
 apply plugin: 'java-library'
-
-group 'org.comroid'
-version '0' // actually build number
-
 apply from: 'gradle/vars.gradle'
-
-def exportedProjects = [
-        ':core',
-
-        ':spigot',
-
-        ':catnip',
-        ':discord4j',
-        ':javacord',
-        ':jda'
-]
 
 tasks.findByName('wrapper')?.configure {
     gradleVersion = '5.2'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
-allprojects {
-    tasks.withType(Javadoc) {
-        options {
-            encoding = 'UTF-8'
-            links = [
-                    "https://docs.oracle.com/javase/8/docs/api/",
-                    "https://docs.oracle.com/javaee/7/api/",
-                    "https://mewna.github.io/catnip/docs/",
-                    //"https://www.javadoc.io/doc/com.discord4j/discord4j-core/3.0.9", // broken
-                    "https://docs.javacord.org/api/v/3.0.4/"//,
-                    //"https://ci.dv8tion.net/job/JDA/javadoc/" // broken
-            ]
-        }
+var cmdr = project
+
+version '0.0.1'
+
+// spigot implementations
+project('spigot') {
+    apply plugin: 'java-library'
+    version '0.0.1'
+
+    dependencies {
+        compileOnly "org.spigotmc:spigot-api:$mcVersion-$spigotRC-SNAPSHOT"
     }
 }
 
-subprojects {
+// discord implementations
+project('catnip') {
     apply plugin: 'java-library'
+    version '0.0.0'
 
+    dependencies {
+        compileOnly 'com.mewna:catnip:3.3.+'
+        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
+        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
+        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+    }
+}
+project('discord4j') {
+    apply plugin: 'java-library'
+    version '0.0.0'
+
+    dependencies {
+        compileOnly 'com.discord4j:discord4j-core:3.2.+'
+        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
+        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+    }
+}
+project('javacord') {
+    apply plugin: 'java-library'
+    version '0.0.0'
+
+    dependencies {
+        compileOnly 'org.javacord:javacord-api:3.5.+'
+        compileOnly 'org.javacord:javacord-core:3.0.4'
+        compileOnly 'org.apache.logging.log4j:log4j-api:2.12.1'
+        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
+        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
+        runtimeOnly 'com.google.flogger:flogger-log4j2-backend:0.7.4'
+    }
+}
+project('jda') {
+    apply plugin: 'java-library'
+    version '0.0.0'
+
+    dependencies {
+        compileOnly 'net.dv8tion:JDA:5.0.+'
+        runtimeOnly 'org.json:json:20190722'
+        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
+        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+    }
+}
+
+allprojects {
     group 'org.comroid'
+
+    if (project.name != 'cmdr')
+        artifactName = 'cmdr-' + project.name
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -62,6 +93,14 @@ subprojects {
     }
 
     compileJava.options.encoding = 'UTF-8'
+
+    sourceSets {
+        main.java.srcDirs = files("$cmdr.projectDir/src/$project.name/main/java")
+        main.resources.srcDirs = files("$cmdr.projectDir/src/$project.name/main/resources")
+        test.java.srcDirs = files("$cmdr.projectDir/src/$project.name/test/java")
+        test.resources.srcDirs = files("$cmdr.projectDir/src/$project.name/test/java")
+    }
+
     repositories {
         maven { url 'https://maven.comroid.org' }
         mavenLocal()
@@ -71,11 +110,10 @@ subprojects {
     }
 
     dependencies {
-        if (project.name != 'core')
-            api project(rootProject.name == 'repo' ? ':cmdr:core' : ':core')
+        if (project.name != 'cmdr')
+            api parent
 
-        implementation 'org.comroid:restless:0.15.2'
-        implementation 'org.comroid:varbind:0.20.0'
+        implementation 'org.comroid:api:0.+'
 
         compileOnly 'org.jetbrains:annotations:21.+'
         implementation 'com.google.flogger:flogger:0.5.1'
@@ -85,13 +123,6 @@ subprojects {
 
         testCompileOnly 'org.codehaus.groovy:groovy:3.0.0-beta-3'
     }
-}
-/*
-task allJavadoc(type: Javadoc) {
-    source exportedProjects.collect { project(it).sourceSets.main.allJava }
-    classpath = files(exportedProjects.collect { project(it).sourceSets.main.compileClasspath })
-    options.encoding = 'UTF-8'
-    options.destinationDirectory(file("./docs/"))
-}*/
 
-apply from: "$parent.projectDir/gradle/publishing.gradle"
+    apply from: "$cmdr.projectDir/gradle/publishing.gradle"
+}

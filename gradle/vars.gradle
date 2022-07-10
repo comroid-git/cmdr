@@ -1,14 +1,64 @@
+import java.util.concurrent.TimeUnit
+
 import static java.lang.System.getenv
 
+String projname() {
+    if (project.name == 'core') {
+        return 'cmdr-core'
+    } else if (isSubmodule) {
+        return parent.name + '-' + project.name
+    } else {
+        return project.name
+    }
+}
+
 ext {
+    buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+    isAutoDeploy = rootProject.name != 'repo' || rootProject.name != 'java' || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
+    isSubmodule = parent.name != 'cmdr'
+
     artifactName = 'cmdr'
     projectName = 'CMDR Command Pipeline'
     projectDescription = 'Helper Library to assist with reflective command generation'
 
-    snapshot = project.version.endsWith("-SNAPSHOT")
+    // spigot variables
+    snapshot = project.version.endsWith('SNAPSHOT')
+    mcVersion = '1.19'
+    mcVersionMj = mcVersion.split('\\.').length == 3 ? mcVersion.substring(0, mcVersion.lastIndexOf('.')) : mcVersion
+    spigotRC = 'R0.1'
 
-    sonatypeUsername = getenv("sonatypeUsername")
-    sonatypePassword = getenv("sonatypePassword")
+    userbase = 'comroid-git'
+    snapshot = project.version.toString().split('.').length == 3
+
+    canSign = getenv().containsKey('GPG_KEYNAME') && getenv().containsKey('GPG_PASSPHRASE')
+    canPublishToSpace = getenv().containsKey('SPACE_PASSWORD') && getenv().containsKey('SPACE_USERNAME')
+    canPublishToSonatype = canSign && getenv().containsKey('SONATYPE_PASSWORD') && getenv().containsKey('SONATYPE_USERNAME')
+    canPublishToGitHub = !snapshot && canSign && getenv().containsKey('GITHUB_PASSWORD') && getenv().containsKey('GITHUB_USERNAME')
 }
 
-ext."signing.password" = getenv("gpgKeyPassword")
+if (canSign) {
+    ext.'signing.gnupg.keyName' = getenv('GPG_KEYNAME')
+    ext.'signing.gnupg.passphrase' = getenv('GPG_PASSPHRASE')
+}
+
+if (canPublishToSpace) {
+    ext {
+        spaceUsername = getenv('SPACE_USERNAME')
+        spacePassword = getenv('SPACE_PASSWORD')
+    }
+}
+
+if (canPublishToSonatype) {
+    ext {
+        sonatypeUsername = getenv('SONATYPE_USERNAME')
+        sonatypePassword = getenv('SONATYPE_PASSWORD')
+    }
+}
+
+if (canPublishToGitHub) {
+    ext {
+        githubRegistryUrl = uri("https://maven.pkg.github.com/comroid-git/cmdr")
+        githubUsername = getenv('GITHUB_USERNAME')
+        githubPassword = getenv('GITHUB_PASSWORD')
+    }
+}
