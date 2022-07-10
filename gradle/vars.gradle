@@ -14,7 +14,7 @@ String projname() {
 
 ext {
     buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
-    isAutoDeploy = rootProject.name != 'repo' || rootProject.name != 'java' || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
+    isAutoDeploy = (rootProject.name != 'repo' && rootProject.name != 'java') || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
     isSubmodule = parent.name != 'cmdr'
 
     artifactName = 'cmdr'

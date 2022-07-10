@@ -22,6 +22,10 @@ project('stdio') {
     version '0.0.1'
 
     mainClassName = 'org.comroid.cmdr.stdio.IOCmdr'
+
+    dependencies {
+        runtimeOnly 'com.google.flogger:flogger-system-backend:0.7.4'
+    }
 }
 
 // spigot implementations
@@ -34,6 +38,7 @@ project('spigot') {
 
     dependencies {
         compileOnly "org.spigotmc:spigot-api:$mcVersion-$spigotRC-SNAPSHOT"
+        runtimeOnly 'com.google.flogger:flogger-log4j2-backend:0.7.4'
     }
 }
 
@@ -125,7 +130,11 @@ allprojects {
         if (project.name != 'cmdr')
             api parent
 
-        implementation 'org.comroid:api:0.+'
+        if (isAutoDeploy) {
+            api 'org.comroid:uniform:0.+'
+        } else {
+            api project(':guardian:uniform')
+        }
 
         compileOnly 'org.jetbrains:annotations:21.+'
         implementation 'com.google.flogger:flogger:0.5.1'

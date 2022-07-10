@@ -25,11 +25,25 @@ public @interface Command {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
-    @interface Group {
+    @interface Hidden {}
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @interface Default {
+        /**
+         * @return the alias of the default command inside this command group
+         */
         String value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.METHOD, ElementType.TYPE})
-    @interface Hidden {}
+    @Target({ElementType.PARAMETER})
+    @interface Arg {
+        /**
+         * @return whether this argument is required
+         */
+        boolean value() default false;
+
+        int ordinal() default -1;
+    }
 }
