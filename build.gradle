@@ -7,11 +7,9 @@ apply plugin: 'java-library'
 apply from: 'gradle/vars.gradle'
 
 tasks.findByName('wrapper')?.configure {
-    gradleVersion = '5.2'
+    gradleVersion = '7.5'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
-
-var cmdr = project
 
 version '0.0.1'
 
@@ -22,6 +20,10 @@ project('stdio') {
     version '0.0.1'
 
     mainClassName = 'org.comroid.cmdr.stdio.IOCmdr'
+
+    run {
+        standardInput = System.in
+    }
 
     dependencies {
         runtimeOnly 'com.google.flogger:flogger-system-backend:0.7.4'
@@ -112,10 +114,10 @@ allprojects {
     compileJava.options.encoding = 'UTF-8'
 
     sourceSets {
-        main.java.srcDirs = files("$cmdr.projectDir/src/$project.name/main/java")
-        main.resources.srcDirs = files("$cmdr.projectDir/src/$project.name/main/resources")
-        test.java.srcDirs = files("$cmdr.projectDir/src/$project.name/test/java")
-        test.resources.srcDirs = files("$cmdr.projectDir/src/$project.name/test/java")
+        main.java.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/main/java")
+        main.resources.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/main/resources")
+        test.java.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
+        test.resources.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
     }
 
     repositories {
@@ -145,5 +147,5 @@ allprojects {
         testCompileOnly 'org.codehaus.groovy:groovy:3.0.0-beta-3'
     }
 
-    apply from: "$cmdr.projectDir/gradle/publishing.gradle"
+    apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/publishing.gradle"
 }

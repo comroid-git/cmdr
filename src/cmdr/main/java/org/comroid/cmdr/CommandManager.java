@@ -1,6 +1,7 @@
 package org.comroid.cmdr;
 
 import com.google.common.flogger.FluentLogger;
+import org.comroid.api.Invocable;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
 import org.comroid.cmdr.model.Cmdr;
@@ -46,11 +47,13 @@ public class CommandManager implements Cmdr {
         Command cmd = cls.getAnnotation(Command.class);
         Command.Alias alias = cls.getAnnotation(Command.Alias.class);
         Command.Hidden hidden = cls.getAnnotation(Command.Hidden.class);
+        Command.Default defaultCmd = cls.getAnnotation(Command.Default.class);
         return new CommandBlob(
                 null,
                 fallback(cmd.name(), cls::getSimpleName, String::isEmpty, Objects::isNull),
                 fallback(cmd.description(), Rewrapper.empty(), String::isEmpty, Objects::isNull),
                 alias == null ? new String[0] : alias.value(),
+                defaultCmd == null ? null : defaultCmd.value(),
                 hidden != null,
                 subcmds
         );
@@ -76,6 +79,7 @@ public class CommandManager implements Cmdr {
                 fallback(cmd.name(), mtd::getName, String::isEmpty, Objects::isNull),
                 fallback(cmd.description(), Rewrapper.empty(), String::isEmpty, Objects::isNull),
                 alias == null ? new String[0] : alias.value(),
+                null,
                 hidden != null,
                 Collections.emptyList(),
                 params.toArray(new CommandParameter[0]));
@@ -94,17 +98,18 @@ public class CommandManager implements Cmdr {
     public final boolean executeCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
         Object response = null;
         try {
-            response = stepIntoCommand(cmdParts, extraArgs);
+            response = stepIntoCommand(cmdr, cmdParts, extraArgs);
         } catch (Throwable t) {
             response = cmdr.handleThrowable(t);
             return false;
         } finally {
-            cmdr.handleResponse(response, extraArgs);
+            if (response != null)
+                cmdr.handleResponse(response, extraArgs);
         }
         return true;
     }
 
-    private Object stepIntoCommand(String[] cmdParts, Object[] extraArgs) {
+    private Object stepIntoCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
         CommandBlob blob;
         int[] i = new int[]{0};
         blob = cmds.get(cmdParts[i[0]]);
@@ -117,10 +122,10 @@ public class CommandManager implements Cmdr {
                     .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[i[0]])))
                     .findFirst()
                     .orElseThrow(NoSuchElementException::new);
-        return runCommand(blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
+        return runCommand(cmdr, blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
     }
 
-    private Object runCommand(CommandBlob commandBlob, String[] args, Object[] extraArgs) {
+    private Object runCommand(Cmdr cmdr, CommandBlob commandBlob, String[] args, Object[] extraArgs) {
         final List<Object> pArgs = new ArrayList<>();
         final List<CommandParameter<?>> params = commandBlob.getParameters();
         long required = params.stream().filter(x -> x.required).count();
@@ -129,7 +134,18 @@ public class CommandManager implements Cmdr {
             throw new CommandException("Invalid argument count " + argCount + "; expected " + required);
         for (int i = 0; i < args.length; i++)
             pArgs.add(StandardValueType.STRING.convert(args[i], params.get(i).type));
-        return commandBlob.getDelegate().autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)));
+        Invocable<?> delegate = commandBlob.getDelegate();
+        if (delegate == null)
+            delegate = commandBlob.getDefaultCmd().ifPresentMap(CommandBlob::getDelegate);
+        if (delegate == null)
+            return "Command '"+commandBlob.name()+"' not executable";
+        try {
+            return delegate.autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)).toArray());
+        } catch (IllegalArgumentException t) {
+            if (!(t.getCause() instanceof IllegalArgumentException))
+                throw t;
+            return cmdr.handleInvalidArguments(commandBlob, args);
+        }
     }
 
     @Override
@@ -140,6 +156,11 @@ public class CommandManager implements Cmdr {
     @Override
     public Object handleThrowable(Throwable t) {
         throw new RuntimeException("Unhandled internal Exception", t);
+    }
+
+    @Override
+    public Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs) {
+        throw new RuntimeException("Invalid arguments");
     }
 
     @Override

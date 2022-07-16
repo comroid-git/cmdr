@@ -2,20 +2,10 @@ import java.util.concurrent.TimeUnit
 
 import static java.lang.System.getenv
 
-String projname() {
-    if (project.name == 'core') {
-        return 'cmdr-core'
-    } else if (isSubmodule) {
-        return parent.name + '-' + project.name
-    } else {
-        return project.name
-    }
-}
-
 ext {
     buildId = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
     isAutoDeploy = (rootProject.name != 'repo' && rootProject.name != 'java') || getenv().containsKey("TEAMCITY") || getenv().containsKey("JITPACK")
-    isSubmodule = parent.name != 'cmdr'
+    isSubmodule = project.name != 'cmdr'
 
     artifactName = 'cmdr'
     projectName = 'CMDR Command Pipeline'

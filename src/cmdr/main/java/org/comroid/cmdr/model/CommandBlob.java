@@ -1,6 +1,7 @@
 package org.comroid.cmdr.model;
 
 import org.comroid.api.Invocable;
+import org.comroid.api.Rewrapper;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +20,7 @@ public class CommandBlob implements Command {
     private final @NotNull String name;
     private final @Nullable String description;
     private final @NotNull @NonNls String[] aliases;
+    private final @Nullable String defaultCmd;
     private final boolean hidden;
     private final Collection<CommandBlob> subCommands;
     private final List<CommandParameter<?>> parameters;
@@ -28,6 +30,7 @@ public class CommandBlob implements Command {
             @NotNull String name,
             @Nullable String description,
             @NotNull @NonNls String[] aliases,
+            @Nullable String defaultCmd,
             boolean hidden,
             Collection<CommandBlob> subCommands,
             CommandParameter<?>... parameters
@@ -36,6 +39,7 @@ public class CommandBlob implements Command {
         this.name = name;
         this.description = description;
         this.aliases = aliases;
+        this.defaultCmd = defaultCmd;
         this.hidden = hidden;
         this.subCommands = subCommands;
         this.parameters = Arrays.asList(parameters);
@@ -43,6 +47,10 @@ public class CommandBlob implements Command {
 
     public @Nullable Invocable<?> getDelegate() {
         return delegate;
+    }
+
+    public Rewrapper<CommandBlob> getDefaultCmd() {
+        return Rewrapper.ofOptional(subCommands.stream().filter(x -> x.names().anyMatch(y -> y.equals(defaultCmd))).findFirst());
     }
 
     @Override
