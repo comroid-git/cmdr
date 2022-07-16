@@ -39,11 +39,10 @@ public @interface Command {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     @interface Arg {
-        /**
-         * @return whether this argument is required
-         */
-        boolean value() default false;
+        boolean required() default true;
 
         int ordinal() default -1;
+
+        String[] autoComplete() default {};
     }
 }

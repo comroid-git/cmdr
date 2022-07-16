@@ -8,10 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
@@ -88,11 +85,21 @@ public class CommandBlob implements Command {
         return Command.class;
     }
 
-    public Collection<String> autoCompleteOptions(Cmdr cmdr, String[] args, Object... extraArgs) {
-        return Collections.emptyList(); // todo
-    }
-
-    public Object evaluate(Cmdr cmdr, String[] args, Object... extraArgs) {
-        return null; // todo
+    public Collection<String> autoCompleteOptions(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
+        CommandBlob cmd;
+        int[] i = new int[]{0};
+        cmd = cmdr.getCommands().get(cmdParts[i[0]]);
+        while (cmdParts.length > ++i[0] && cmd.getSubCommands()
+                .stream()
+                .flatMap(CommandBlob::names)
+                .anyMatch(x -> x.equals(cmdParts[i[0]])))
+            cmd = cmd.getSubCommands()
+                    .stream()
+                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[i[0]])))
+                    .findFirst()
+                    .orElseThrow(NoSuchElementException::new);
+        if (cmdParts.length-1-i[0] < cmd.getParameters().stream().filter(x -> x.required).count()-1)
+            return Arrays.asList(cmdr.handleInvalidArguments(cmd, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length)).toString());
+        return new ArrayList<>();
     }
 }

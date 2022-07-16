@@ -70,7 +70,7 @@ public class CommandManager implements Cmdr {
             Command.Arg arg = parameter.getAnnotation(Command.Arg.class);
             Class<?> type = parameter.getType();
             ValueType<?> vType = StandardValueType.forClass(type).assertion("Non-standard type not supported: " + type);
-            params.add(new CommandParameter<>(vType, parameter.getName(), arg.ordinal(), arg.value()));
+            params.add(new CommandParameter<>(vType, parameter.getName(), arg.ordinal(), arg.required(), arg.autoComplete()));
         }
         params.sort(Comparator.comparingInt(it -> it.ordinal));
 
@@ -90,9 +90,10 @@ public class CommandManager implements Cmdr {
         return Collections.unmodifiableMap(cmds);
     }
 
-    public final Stream<String> autoComplete(CommandBlob commandBlob, String[] args, Object[] extraArgs) {
-        return Stream.concat(commandBlob.getSubCommands().stream().flatMap(CommandBlob::names),
-                commandBlob.autoCompleteOptions(this, args, extraArgs).stream());
+    public final Stream<String> autoComplete(CommandBlob commandBlob, String[] cmdParts, Object[] extraArgs) {
+        return Stream.concat(
+                commandBlob.getSubCommands().stream().flatMap(CommandBlob::names),
+                commandBlob.autoCompleteOptions(this, cmdParts, extraArgs).stream());
     }
 
     public final boolean executeCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {

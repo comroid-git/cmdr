@@ -58,7 +58,11 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
 
     @Override
     public final List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String alias, @NotNull String[] args) {
-        return cmdr.autoComplete(getCommands().get(alias), args, Stream.concat(getExtraArguments(), Stream.of(sender)).toArray())
+        return cmdr.autoComplete(
+                    getCommands().get(alias),
+                    Stream.concat(Stream.of(alias), Stream.of(args)).toArray(String[]::new),
+                    Stream.concat(getExtraArguments(), Stream.of(sender)).toArray()
+                )
                 .filter(txt -> txt.startsWith(args[args.length - 1]))
                 .collect(Collectors.toList());
     }
@@ -80,7 +84,8 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
 
     @Override
     public Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs) {
-        return ErrorColorizer.makeMessage("Invalid arguments: " + Arrays.toString(gameArgs));
+        return ErrorColorizer.makeMessage("Invalid arguments: " + Arrays.toString(gameArgs) + " minimum: " + cmd
+                .getParameters().stream().filter(x -> x.required).count());
     }
 
     @Override

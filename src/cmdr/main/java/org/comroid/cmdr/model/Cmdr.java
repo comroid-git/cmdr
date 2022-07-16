@@ -13,7 +13,7 @@ public interface Cmdr {
 
     Object handleThrowable(Throwable t);
 
-    Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs);
+    Object handleInvalidArguments(CommandBlob cmd, String[] userArgs);
 
     void handleResponse(Object o, Object[] extraArgs);
 
@@ -41,8 +41,8 @@ public interface Cmdr {
         }
 
         @Override
-        default Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs) {
-            return getUnderlyingCmdr().handleInvalidArguments(cmd, gameArgs);
+        default Object handleInvalidArguments(CommandBlob cmd, String[] userArgs) {
+            return getUnderlyingCmdr().handleInvalidArguments(cmd, userArgs);
         }
 
         @Override
