@@ -34,7 +34,7 @@ public class IOCmdr extends CommandManager implements Cmdr, Closeable {
     public static void run(Class<?>... classes) throws IOException {
         try (IOCmdr cmdr = new IOCmdr(System.in, System.out)) {
             for (Class<?> extraClass : classes)
-                cmdr.registerCommands(extraClass);
+                cmdr.registerCommands(cmdr, extraClass);
             cmdr.run();
         }
     }

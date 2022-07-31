@@ -53,9 +53,9 @@ public class CommandManager implements Cmdr {
     }
 
     @Override
-    public final Set<CommandBlob> registerCommands(Class<?>... cls) {
+    public final Set<CommandBlob> registerCommands(Cmdr cmdr, Class<?>... cls) {
         return Stream.of(cls)
-                .map(this::buildCommandGroup)
+                .map(kls -> buildCommandGroup(cmdr, kls))
                 .peek(cmd -> cmd.names().peek(key -> {
                     if (cmds.containsKey(key))
                         throw new RuntimeException("Duplicate alias: " + key);
@@ -63,11 +63,11 @@ public class CommandManager implements Cmdr {
                 .collect(Collectors.toSet());
     }
 
-    private CommandBlob buildCommandGroup(Class<?> cls) {
+    private CommandBlob buildCommandGroup(Cmdr cmdr, Class<?> cls) {
         List<CommandBlob> subcmds = Arrays.stream(cls.getMethods())
                 .filter(mtd -> Bitmask.isFlagSet(mtd.getModifiers(), (Modifier.PUBLIC | Modifier.STATIC)))
                 .filter(mtd -> mtd.isAnnotationPresent(Command.class))
-                .map(this::buildCommandBlob)
+                .map(mtd1 -> buildCommandBlob(cmdr, mtd1))
                 .collect(Collectors.toList());
         Command cmd = cls.getAnnotation(Command.class);
         Command.Alias alias = cls.getAnnotation(Command.Alias.class);
@@ -84,7 +84,7 @@ public class CommandManager implements Cmdr {
         );
     }
 
-    private CommandBlob buildCommandBlob(Method mtd) {
+    private CommandBlob buildCommandBlob(Cmdr cmdr, Method mtd) {
         Command cmd = mtd.getAnnotation(Command.class);
         Command.Alias alias = mtd.getAnnotation(Command.Alias.class);
         Command.Hidden hidden = mtd.getAnnotation(Command.Hidden.class);
@@ -95,7 +95,10 @@ public class CommandManager implements Cmdr {
             Command.Arg arg = parameter.getAnnotation(Command.Arg.class);
             Class<?> type = parameter.getType();
             ValueType<?> vType = StandardValueType.forClass(type).assertion("Non-standard type not supported: " + type);
-            params.add(new CommandParameter<>(vType, parameter.getName(), arg.ordinal(), arg.required(), arg.autoComplete()));
+            Invocable<Stream<String>> autoCompleteDelegate = arg.autoComplete().length == 1 && arg.autoComplete()[0].startsWith(Cmdr.OPTION_OBTAINER_PREFIX)
+                    ? Invocable.ofMethodCall(cmdr.getClass(), arg.autoComplete()[0].substring(Cmdr.OPTION_OBTAINER_PREFIX.length()))
+                    : null;
+            params.add(new CommandParameter<>(vType, parameter.getName(), arg.ordinal(), arg.required(), arg.autoComplete(), autoCompleteDelegate));
         }
         params.sort(Comparator.comparingInt(it -> it.ordinal));
 

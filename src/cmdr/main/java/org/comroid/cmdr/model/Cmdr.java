@@ -12,7 +12,7 @@ public interface Cmdr {
 
     Stream<Object> getExtraArguments();
 
-    Set<CommandBlob> registerCommands(Class<?>... cls);
+    Set<CommandBlob> registerCommands(Cmdr cmdr, Class<?>... cls);
 
     Object handleThrowable(Throwable t);
 
@@ -38,8 +38,8 @@ public interface Cmdr {
         }
 
         @Override
-        default Set<CommandBlob> registerCommands(Class<?>... cls) {
-            return getUnderlyingCmdr().registerCommands(cls);
+        default Set<CommandBlob> registerCommands(Cmdr cmdr, Class<?>... cls) {
+            return getUnderlyingCmdr().registerCommands(cmdr, cls);
         }
 
         @Override
