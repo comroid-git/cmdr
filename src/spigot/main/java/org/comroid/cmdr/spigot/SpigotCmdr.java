@@ -69,8 +69,13 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
                         getCommands().get(alias),
                         Stream.concat(Stream.of(alias), Stream.of(args)).toArray(String[]::new),
                         Stream.concat(getExtraArguments(), Stream.of(sender)).toArray())
-                .map(txt -> txt.startsWith(Cmdr.OPTION_PREFIX) ? txt.substring(Cmdr.OPTION_PREFIX.length()) : txt.startsWith(args[args.length - 1]) ? txt : null)
-                .filter(Objects::nonNull)
+                .flatMap(txt -> {
+                    if (txt.startsWith(Cmdr.OPTION_PREFIX))
+                        return Stream.of(txt.substring(Cmdr.OPTION_PREFIX.length()));
+                    if (txt.startsWith(args[args.length - 1]))
+                        return Stream.of(txt);
+                    return Stream.empty();
+                })
                 .collect(Collectors.toList());
     }
 
