@@ -3,28 +3,25 @@ package org.comroid.cmdr.stdio;
 import org.comroid.cmdr.CommandManager;
 import org.comroid.cmdr.model.Cmdr;
 import org.comroid.cmdr.model.Command;
-import org.comroid.cmdr.model.CommandBlob;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class IOCmdr extends CommandManager implements Cmdr, Closeable {
-    @Command
-    public static String hello_world() {
-        return "Hello, world!";
-    }
-
     private final InputStream input;
     private final OutputStream output;
     private final PrintWriter print;
-
     public IOCmdr(InputStream input, OutputStream output) {
         this.input = input;
         this.output = output;
         this.print = new PrintWriter(output instanceof PrintStream ? output : new PrintStream(output));
+    }
+
+    @Command
+    public static String hello_world() {
+        return "Hello, world!";
     }
 
     public static void main(String... extraClassNames) throws IOException, ClassNotFoundException {

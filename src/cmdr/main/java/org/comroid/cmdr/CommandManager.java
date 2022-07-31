@@ -10,6 +10,7 @@ import org.comroid.cmdr.model.CommandBlob;
 import org.comroid.cmdr.model.CommandParameter;
 import org.comroid.util.Bitmask;
 import org.comroid.util.StandardValueType;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -26,6 +27,30 @@ public class CommandManager implements Cmdr {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
 
     protected final Map<String, CommandBlob> cmds = new ConcurrentHashMap<>();
+
+    @Override
+    public final Map<String, CommandBlob> getCommands() {
+        return Collections.unmodifiableMap(cmds);
+    }
+
+    @Override
+    public Stream<Object> getExtraArguments() {
+        return Stream.empty();
+    }
+
+    @Internal
+    public static CommandBlob extractCommandBlob(CommandBlob base, String[] cmdParts, int[] partIndex) {
+        while (cmdParts.length > ++partIndex[0] && base.getSubCommands()
+                .stream()
+                .flatMap(CommandBlob::names)
+                .anyMatch(x -> x.equals(cmdParts[partIndex[0]])))
+            base = base.getSubCommands()
+                    .stream()
+                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[partIndex[0]])))
+                    .findFirst()
+                    .orElseThrow(NoSuchElementException::new);
+        return base;
+    }
 
     @Override
     public final Set<CommandBlob> registerCommands(Class<?>... cls) {
@@ -85,11 +110,6 @@ public class CommandManager implements Cmdr {
                 params.toArray(new CommandParameter[0]));
     }
 
-    @Override
-    public final Map<String, CommandBlob> getCommands() {
-        return Collections.unmodifiableMap(cmds);
-    }
-
     public final Stream<String> autoComplete(Cmdr cmdr, CommandBlob commandBlob, String[] cmdParts, Object[] extraArgs) {
         commandBlob = extractCommandBlob(commandBlob, cmdParts, new int[]{0});
         return Stream.concat(
@@ -119,20 +139,6 @@ public class CommandManager implements Cmdr {
         return runCommand(cmdr, blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
     }
 
-    @Internal
-    public static CommandBlob extractCommandBlob(CommandBlob base, String[] cmdParts, int[] partIndex) {
-        while (cmdParts.length > ++partIndex[0] && base.getSubCommands()
-                .stream()
-                .flatMap(CommandBlob::names)
-                .anyMatch(x -> x.equals(cmdParts[partIndex[0]])))
-            base = base.getSubCommands()
-                    .stream()
-                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[partIndex[0]])))
-                    .findFirst()
-                    .orElseThrow(NoSuchElementException::new);
-        return base;
-    }
-
     private Object runCommand(Cmdr cmdr, CommandBlob commandBlob, String[] args, Object[] extraArgs) {
         final List<Object> pArgs = new ArrayList<>();
         final List<CommandParameter<?>> params = commandBlob.getParameters();
@@ -146,7 +152,7 @@ public class CommandManager implements Cmdr {
         if (delegate == null)
             delegate = commandBlob.getDefaultCmd().ifPresentMap(CommandBlob::getDelegate);
         if (delegate == null)
-            return "Command '"+commandBlob.name()+"' not executable";
+            return "Command '" + commandBlob.name() + "' not executable";
         try {
             return delegate.autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)).toArray());
         } catch (IllegalArgumentException t) {
@@ -154,11 +160,6 @@ public class CommandManager implements Cmdr {
                 throw t;
             return cmdr.handleInvalidArguments(commandBlob, args);
         }
-    }
-
-    @Override
-    public Stream<Object> getExtraArguments() {
-        return Stream.empty();
     }
 
     @Override

@@ -9,7 +9,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +26,22 @@ public class CommandBlob implements Command {
     private final boolean hidden;
     private final Collection<CommandBlob> subCommands;
     private final List<CommandParameter<?>> parameters;
+
+    public @Nullable Invocable<?> getDelegate() {
+        return delegate;
+    }
+
+    public Rewrapper<CommandBlob> getDefaultCmd() {
+        return Rewrapper.ofOptional(subCommands.stream().filter(x -> x.names().anyMatch(y -> y.equals(defaultCmd))).findFirst());
+    }
+
+    public Collection<CommandBlob> getSubCommands() {
+        return subCommands;
+    }
+
+    public List<CommandParameter<?>> getParameters() {
+        return parameters;
+    }
 
     public CommandBlob(
             @Nullable Method method,
@@ -44,14 +63,6 @@ public class CommandBlob implements Command {
         this.parameters = Arrays.asList(parameters);
     }
 
-    public @Nullable Invocable<?> getDelegate() {
-        return delegate;
-    }
-
-    public Rewrapper<CommandBlob> getDefaultCmd() {
-        return Rewrapper.ofOptional(subCommands.stream().filter(x -> x.names().anyMatch(y -> y.equals(defaultCmd))).findFirst());
-    }
-
     @Override
     public @NotNull String name() {
         return name;
@@ -69,17 +80,9 @@ public class CommandBlob implements Command {
     public @NotNull @NonNls Stream<String> names() {
         return Stream.concat(Stream.of(name), Stream.of(aliases)).distinct();
     }
-    
+
     public boolean hidden() {
         return hidden;
-    }
-
-    public Collection<CommandBlob> getSubCommands() {
-        return subCommands;
-    }
-
-    public List<CommandParameter<?>> getParameters() {
-        return parameters;
     }
 
     @Override
@@ -92,7 +95,7 @@ public class CommandBlob implements Command {
         int[] i = new int[]{0};
         cmd = cmdr.getCommands().get(cmdParts[i[0]]);
         cmd = CommandManager.extractCommandBlob(cmd, cmdParts, i);
-        if (cmdParts.length-1-i[0] < cmd.getParameters().stream().filter(x -> x.required).count() && cmdParts.length - 1 - i[0] >= 0)
+        if (cmdParts.length - 1 - i[0] < cmd.getParameters().stream().filter(x -> x.required).count() && cmdParts.length - 1 - i[0] >= 0)
             return Arrays.stream(cmd.parameters.get(cmdParts.length - 1 - i[0]).autoCompleteOptions)
                     .map(cmdr::prefixAutofillOption)
                     .collect(Collectors.toList());

@@ -5,12 +5,10 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 
 public interface MessageColorizer {
     ChatColor getPrimaryColor();
-    ChatColor getSecondaryColor();
-    ChatColor getDecorationColor();
 
-    default String makeMessage(String format, Object... vars) {
-        return getPrimaryColor() + String.format(format, (Object[]) formatStrings(this, vars));
-    }
+    ChatColor getSecondaryColor();
+
+    ChatColor getDecorationColor();
 
     @Internal
     static String[] formatStrings(MessageColorizer colorizer, Object[] vars) {
@@ -20,6 +18,10 @@ public interface MessageColorizer {
             strings[i] = colorizer.getSecondaryColor() + String.valueOf(vars[i]) + colorizer.getPrimaryColor();
 
         return strings;
+    }
+
+    default String makeMessage(String format, Object... vars) {
+        return getPrimaryColor() + String.format(format, (Object[]) formatStrings(this, vars));
     }
 
     class Impl implements MessageColorizer {

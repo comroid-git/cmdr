@@ -1,8 +1,5 @@
 package org.comroid.cmdr.spigot;
 
-import org.comroid.cmdr.spigot.MessageColorizer;
-import org.comroid.cmdr.spigot.SpigotCmdr;
-
 public class InnerCommandException extends RuntimeException {
     private final MessageColorizer level;
 

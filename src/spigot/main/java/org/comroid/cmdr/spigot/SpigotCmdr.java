@@ -39,14 +39,6 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
         return colorizer.getDecorationColor();
     }
 
-    public SpigotCmdr() {
-        this(InfoColorizer);
-    }
-
-    public SpigotCmdr(MessageColorizer colorizer) {
-        this.colorizer = colorizer;
-    }
-
     @Override
     public final Cmdr getUnderlyingCmdr() {
         return cmdr;
@@ -55,6 +47,20 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
     @Override
     public Stream<Object> getExtraArguments() {
         return Stream.of(this);
+    }
+
+    public String getChatPrefix() {
+        return getDecorationColor() + "["
+                + getSecondaryColor() + getName()
+                + getDecorationColor() + ']';
+    }
+
+    public SpigotCmdr() {
+        this(InfoColorizer);
+    }
+
+    public SpigotCmdr(MessageColorizer colorizer) {
+        this.colorizer = colorizer;
     }
 
     @Override
@@ -98,11 +104,5 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
     @Override
     public String prefixAutofillOption(String option) {
         return Cmdr.OPTION_PREFIX + option;
-    }
-
-    public String getChatPrefix() {
-        return getDecorationColor() + "["
-                + getSecondaryColor() + getName()
-                + getDecorationColor() + ']';
     }
 }

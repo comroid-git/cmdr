@@ -7,11 +7,11 @@ import java.util.stream.Stream;
 public interface Cmdr {
     String OPTION_PREFIX = "§§";
 
-    Set<CommandBlob> registerCommands(Class<?>... cls);
-
     Map<String, CommandBlob> getCommands();
 
     Stream<Object> getExtraArguments();
+
+    Set<CommandBlob> registerCommands(Class<?>... cls);
 
     Object handleThrowable(Throwable t);
 
@@ -27,11 +27,6 @@ public interface Cmdr {
         Cmdr getUnderlyingCmdr();
 
         @Override
-        default Set<CommandBlob> registerCommands(Class<?>... cls) {
-            return getUnderlyingCmdr().registerCommands(cls);
-        }
-
-        @Override
         default Map<String, CommandBlob> getCommands() {
             return getUnderlyingCmdr().getCommands();
         }
@@ -39,6 +34,11 @@ public interface Cmdr {
         @Override
         default Stream<Object> getExtraArguments() {
             return getUnderlyingCmdr().getExtraArguments();
+        }
+
+        @Override
+        default Set<CommandBlob> registerCommands(Class<?>... cls) {
+            return getUnderlyingCmdr().registerCommands(cls);
         }
 
         @Override
