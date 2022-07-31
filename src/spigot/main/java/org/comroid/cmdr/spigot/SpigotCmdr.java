@@ -1,6 +1,7 @@
 package org.comroid.cmdr.spigot;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.comroid.cmdr.CommandManager;
@@ -64,7 +65,7 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
     }
 
     @Override
-    public final List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String alias, @NotNull String[] args) {
+    public final List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         return cmdr.autoComplete(this,
                         getCommands().get(alias),
                         Stream.concat(Stream.of(alias), Stream.of(args)).toArray(String[]::new),
@@ -80,7 +81,7 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
     }
 
     @Override
-    public final boolean onCommand(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String label, @NotNull String[] args) {
+    public final boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         return cmdr.executeCommand(
                 this,
                 Stream.concat(Stream.of(label), Stream.of(args)).toArray(String[]::new),
