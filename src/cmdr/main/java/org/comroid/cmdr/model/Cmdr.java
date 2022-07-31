@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 public interface Cmdr {
     String OPTION_PREFIX = "§§";
+    String OPTION_OBTAINER_PREFIX = "°";
 
     Map<String, CommandBlob> getCommands();
 
