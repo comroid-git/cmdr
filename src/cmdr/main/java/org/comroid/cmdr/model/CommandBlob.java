@@ -2,6 +2,7 @@ package org.comroid.cmdr.model;
 
 import org.comroid.api.Invocable;
 import org.comroid.api.Rewrapper;
+import org.comroid.cmdr.CommandManager;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
@@ -89,17 +91,11 @@ public class CommandBlob implements Command {
         CommandBlob cmd;
         int[] i = new int[]{0};
         cmd = cmdr.getCommands().get(cmdParts[i[0]]);
-        while (cmdParts.length > ++i[0] && cmd.getSubCommands()
-                .stream()
-                .flatMap(CommandBlob::names)
-                .anyMatch(x -> x.equals(cmdParts[i[0]])))
-            cmd = cmd.getSubCommands()
-                    .stream()
-                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[i[0]])))
-                    .findFirst()
-                    .orElseThrow(NoSuchElementException::new);
-        if (cmdParts.length-1-i[0] < cmd.getParameters().stream().filter(x -> x.required).count()-1)
-            return Arrays.asList(cmdr.handleInvalidArguments(cmd, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length)).toString());
+        cmd = CommandManager.extractCommandBlob(cmd, cmdParts, i);
+        if (cmdParts.length-1-i[0] < cmd.getParameters().stream().filter(x -> x.required).count() && cmdParts.length - 1 - i[0] >= 0)
+            return Arrays.stream(cmd.parameters.get(cmdParts.length - 1 - i[0]).autoCompleteOptions)
+                    .map(cmdr::prefixAutofillOption)
+                    .collect(Collectors.toList());
         return new ArrayList<>();
     }
 }

@@ -91,6 +91,7 @@ public class CommandManager implements Cmdr {
     }
 
     public final Stream<String> autoComplete(CommandBlob commandBlob, String[] cmdParts, Object[] extraArgs) {
+        commandBlob = extractCommandBlob(commandBlob, cmdParts, new int[]{0});
         return Stream.concat(
                 commandBlob.getSubCommands().stream().flatMap(CommandBlob::names),
                 commandBlob.autoCompleteOptions(this, cmdParts, extraArgs).stream());
@@ -114,16 +115,22 @@ public class CommandManager implements Cmdr {
         CommandBlob blob;
         int[] i = new int[]{0};
         blob = cmds.get(cmdParts[i[0]]);
-        while (cmdParts.length > ++i[0] && blob.getSubCommands()
+        blob = extractCommandBlob(blob, cmdParts, i);
+        return runCommand(cmdr, blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
+    }
+
+    @Internal
+    public static CommandBlob extractCommandBlob(CommandBlob base, String[] cmdParts, int[] partIndex) {
+        while (cmdParts.length > ++partIndex[0] && base.getSubCommands()
                 .stream()
                 .flatMap(CommandBlob::names)
-                .anyMatch(x -> x.equals(cmdParts[i[0]])))
-            blob = blob.getSubCommands()
+                .anyMatch(x -> x.equals(cmdParts[partIndex[0]])))
+            base = base.getSubCommands()
                     .stream()
-                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[i[0]])))
+                    .filter(x -> x.names().anyMatch(y -> y.equals(cmdParts[partIndex[0]])))
                     .findFirst()
                     .orElseThrow(NoSuchElementException::new);
-        return runCommand(cmdr, blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
+        return base;
     }
 
     private Object runCommand(Cmdr cmdr, CommandBlob commandBlob, String[] args, Object[] extraArgs) {
