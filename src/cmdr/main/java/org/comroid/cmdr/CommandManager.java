@@ -90,11 +90,11 @@ public class CommandManager implements Cmdr {
         return Collections.unmodifiableMap(cmds);
     }
 
-    public final Stream<String> autoComplete(CommandBlob commandBlob, String[] cmdParts, Object[] extraArgs) {
+    public final Stream<String> autoComplete(Cmdr cmdr, CommandBlob commandBlob, String[] cmdParts, Object[] extraArgs) {
         commandBlob = extractCommandBlob(commandBlob, cmdParts, new int[]{0});
         return Stream.concat(
                 commandBlob.getSubCommands().stream().flatMap(CommandBlob::names),
-                commandBlob.autoCompleteOptions(this, cmdParts, extraArgs).stream());
+                commandBlob.autoCompleteOptions(cmdr, cmdParts, extraArgs).stream());
     }
 
     public final boolean executeCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {

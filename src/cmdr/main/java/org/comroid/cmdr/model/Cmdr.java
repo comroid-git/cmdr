@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public interface Cmdr {
+    String OPTION_PREFIX = "§§";
+
     Set<CommandBlob> registerCommands(Class<?>... cls);
 
     Map<String, CommandBlob> getCommands();
@@ -16,6 +18,10 @@ public interface Cmdr {
     Object handleInvalidArguments(CommandBlob cmd, String[] userArgs);
 
     void handleResponse(Object o, Object[] extraArgs);
+
+    default String prefixAutofillOption(String option) {
+        return option;
+    }
 
     interface Underlying extends Cmdr {
         Cmdr getUnderlyingCmdr();

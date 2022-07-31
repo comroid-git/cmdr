@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,12 +59,12 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
 
     @Override
     public final List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String alias, @NotNull String[] args) {
-        return cmdr.autoComplete(
-                    getCommands().get(alias),
-                    Stream.concat(Stream.of(alias), Stream.of(args)).toArray(String[]::new),
-                    Stream.concat(getExtraArguments(), Stream.of(sender)).toArray()
-                )
-                .filter(txt -> txt.startsWith(args[args.length - 1]))
+        return cmdr.autoComplete(this,
+                        getCommands().get(alias),
+                        Stream.concat(Stream.of(alias), Stream.of(args)).toArray(String[]::new),
+                        Stream.concat(getExtraArguments(), Stream.of(sender)).toArray())
+                .map(txt -> txt.startsWith(Cmdr.OPTION_PREFIX) ? txt.substring(Cmdr.OPTION_PREFIX.length()) : txt.startsWith(args[args.length - 1]) ? txt : null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -92,6 +93,11 @@ public abstract class SpigotCmdr extends JavaPlugin implements Cmdr.Underlying, 
     public void handleResponse(Object response, Object[] extraArgs) {
         CommandSender sender = ArrayUtil.get(extraArgs, CommandSender.class);
         sender.sendMessage(getChatPrefix() + ' ' + response);
+    }
+
+    @Override
+    public String prefixAutofillOption(String option) {
+        return Cmdr.OPTION_PREFIX + option;
     }
 
     public String getChatPrefix() {
