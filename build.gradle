@@ -11,7 +11,7 @@ tasks.findByName('wrapper')?.configure {
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
-version '0.0.1'
+version '0.1.0'
 
 // stdio implementations
 project('stdio') {
@@ -33,7 +33,7 @@ project('stdio') {
 // spigot implementations
 project('spigot') {
     apply plugin: 'java-library'
-    version '0.0.1'
+    version '0.1.0'
 
     sourceCompatibility = 17
     targetCompatibility = 17
