@@ -114,7 +114,7 @@ public class CommandManager implements Cmdr {
         commandBlob = extractCommandBlob(commandBlob, cmdParts, new int[]{0});
         return Stream.concat(
                 commandBlob.getSubCommands().stream().flatMap(CommandBlob::names),
-                commandBlob.autoCompleteOptions(cmdr, cmdParts, extraArgs).stream());
+                commandBlob.autoCompleteOptions(cmdr, cmdParts, extraArgs));
     }
 
     public final boolean executeCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {

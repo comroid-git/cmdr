@@ -90,15 +90,14 @@ public class CommandBlob implements Command {
         return Command.class;
     }
 
-    public Collection<String> autoCompleteOptions(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
+    public Stream<String> autoCompleteOptions(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
         CommandBlob cmd;
         int[] i = new int[]{0};
         cmd = cmdr.getCommands().get(cmdParts[i[0]]);
         cmd = CommandManager.extractCommandBlob(cmd, cmdParts, i);
         if (cmdParts.length - 1 - i[0] < cmd.getParameters().stream().filter(x -> x.required).count() && cmdParts.length - 1 - i[0] >= 0)
             return Arrays.stream(cmd.parameters.get(cmdParts.length - 1 - i[0]).autoCompleteOptions)
-                    .map(cmdr::prefixAutofillOption)
-                    .collect(Collectors.toList());
-        return new ArrayList<>();
+                    .map(cmdr::prefixAutofillOption);
+        return Stream.empty();
     }
 }
