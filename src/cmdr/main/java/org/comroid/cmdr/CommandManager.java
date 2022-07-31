@@ -102,7 +102,7 @@ public class CommandManager implements Cmdr {
         try {
             response = stepIntoCommand(cmdr, cmdParts, extraArgs);
         } catch (Throwable t) {
-            response = cmdr.handleThrowable(t);
+            response = cmdr.handleThrowable(Invocable.unwrapInvocationTargetException(t));
             return false;
         } finally {
             if (response != null)
