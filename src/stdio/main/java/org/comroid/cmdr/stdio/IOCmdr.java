@@ -13,6 +13,7 @@ public class IOCmdr extends CommandManager implements Cmdr, Closeable {
     private final InputStream input;
     private final OutputStream output;
     private final PrintWriter print;
+
     public IOCmdr(InputStream input, OutputStream output) {
         this.input = input;
         this.output = output;
