@@ -58,7 +58,7 @@ publishing {
                 name = rootProject.name
                 description = project.projectDescription
                 inceptionYear = '2020'
-                url = "https://github.com/comroid-git/$rootProject.name".toString()
+                url = "https://github.com/$userbase/$rootProject.name".toString()
 
                 licenses {
                     license {
@@ -76,9 +76,9 @@ publishing {
                 }
 
                 scm {
-                    connection = "scm:git:git://github.com/comroid-git/${rootProject.name}.git".toString()
-                    developerConnection = "scm:git:ssh://github.com/comroid-git/${rootProject.name}.git".toString()
-                    url = "https://github.com/comroid-git/$rootProject.name".toString()
+                    connection = "scm:git:git://github.com/$userbase/${rootProject.name}.git".toString()
+                    developerConnection = "scm:git:ssh://github.com/$userbase/${rootProject.name}.git".toString()
+                    url = "https://github.com/$userbase/$rootProject.name".toString()
                 }
             }
 
@@ -92,7 +92,7 @@ task generateGithubPom(type: GenerateMavenPom) {
     pom = publishing.publications.mavenJava.pom
 }
 
-if (false){//TODO canSign) {
+if (canSign) {
     apply plugin: 'signing'
 
     signing {
