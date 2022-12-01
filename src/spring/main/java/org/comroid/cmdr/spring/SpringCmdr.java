@@ -7,16 +7,36 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
-public class SpringCmdr extends CommandManager {
+public class SpringCmdr {
+    private final CommandManager cmdr;
     private final AnnotationConfigApplicationContext ctx;
-    private CmdrHandler handler;
+    @Autowired
+    private SpringCmdrHandler handler;
     @Autowired
     private CmdrConfig config;
 
     public SpringCmdr() {
-        this.ctx = new AnnotationConfigApplicationContext() ;
+        this.ctx = new AnnotationConfigApplicationContext();
+        this.cmdr = new CommandManager() {
+            @Override
+            public Object handleThrowable(Throwable t) {
+                return handler.handleThrowable(t);
+            }
+
+            @Override
+            public Object handleInvalidArguments(CommandBlob cmd, String[] args) {
+                return handler.handleInvalidArguments(cmd, args);
+            }
+
+            @Override
+            public void handleResponse(Object o, Object[] extraArgs) {
+                handler.handleResponse(extraArgs[0], o);
+            }
+        };
     }
 
     @PostConstruct
@@ -27,36 +47,23 @@ public class SpringCmdr extends CommandManager {
         ctx.scan(scan);
         ctx.refresh();
 
-        // register custom handler
-        this.handler = ctx.getBeansOfType(CmdrHandler.class)
-                .values()
-                .stream()
-                .findAny()
-                .orElseGet(CmdrHandler::new);
         // register command containers
         ctx.getBeansOfType(Object.class)
                 .values()
                 .stream()
                 .filter(bean -> bean.getClass().getPackageName().equals(scan))
-                .forEach(this::registerCommands);
+                .forEach(cmdr::registerCommands);
     }
 
-    public void handleCommand(String rawCommand) {
-        executeCommand(this, rawCommand.split(" "), new Object[0]);
+    public List<CommandBlob> getCommands() {
+        return cmdr.getCommands()
+                .values()
+                .stream()
+                .distinct()
+                .collect(Collectors.toUnmodifiableList());
     }
 
-    @Override
-    public Object handleThrowable(Throwable t) {
-        return handler.handleThrowable(t);
-    }
-
-    @Override
-    public Object handleInvalidArguments(CommandBlob cmd, String[] args) {
-        return handler.handleInvalidArguments(cmd, args);
-    }
-
-    @Override
-    public void handleResponse(Object o, Object[] extraArgs) {
-        handler.handleResponse(o);
+    public void handleCommand(Object user, String rawCommand) {
+        cmdr.executeCommand(cmdr, rawCommand.split(" "), new Object[]{user});
     }
 }

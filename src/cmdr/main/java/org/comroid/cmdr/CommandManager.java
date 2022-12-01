@@ -27,7 +27,7 @@ import static org.comroid.util.FallbackUtil.fallback;
 public class CommandManager implements Cmdr {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
 
-    protected final Map<String, CommandBlob> cmds = new ConcurrentHashMap<>();
+    private final Map<String, CommandBlob> cmds = new ConcurrentHashMap<>();
 
     @Override
     public final Map<String, CommandBlob> getCommands() {

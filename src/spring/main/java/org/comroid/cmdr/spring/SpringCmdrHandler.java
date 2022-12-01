@@ -3,11 +3,13 @@ package org.comroid.cmdr.spring;
 import com.google.common.flogger.FluentLogger;
 import org.comroid.cmdr.model.CommandBlob;
 
-public class CmdrHandler {
+import java.util.Arrays;
+
+public class SpringCmdrHandler {
     protected final FluentLogger log = FluentLogger.forEnclosingClass();
 
-    protected void handleResponse(Object o) {
-        log.atSevere().log("Unhandled response: %s", o);
+    protected void handleResponse(Object user, Object o) {
+        log.atSevere().log("Unhandled response for user %s: %s", user, o);
     }
 
     protected String handleThrowable(Throwable t) {
