@@ -30,6 +30,18 @@ project('stdio') {
     }
 }
 
+// spring component implementation
+project('spring') {
+    apply plugin: 'java-library'
+    version '0.1.1-SNAPSHOT'
+
+    dependencies {
+        annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:2.7.5"
+        compileOnly 'org.springframework.boot:spring-boot-starter:2.7.5'
+        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+    }
+}
+
 // spigot implementations
 project('spigot') {
     apply plugin: 'java-library'

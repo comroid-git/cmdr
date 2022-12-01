@@ -2,6 +2,8 @@ rootProject.name = 'cmdr'
 
 include(':stdio')
 
+include(':spring')
+
 include(':spigot')
 
 include(':catnip')
