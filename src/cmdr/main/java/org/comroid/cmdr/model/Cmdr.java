@@ -13,6 +13,7 @@ public interface Cmdr {
     Stream<Object> getExtraArguments();
 
     Set<CommandBlob> registerCommands(Class<?>... cls);
+    Set<CommandBlob> registerCommands(Object... objs);
 
     Object handleThrowable(Throwable t);
 

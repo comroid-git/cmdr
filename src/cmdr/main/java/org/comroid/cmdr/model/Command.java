@@ -44,4 +44,9 @@ public @interface Command {
 
         String[] autoComplete() default {};
     }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    @interface ExtraArgs {
+    }
 }

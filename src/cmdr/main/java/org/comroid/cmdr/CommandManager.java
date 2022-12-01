@@ -11,6 +11,7 @@ import org.comroid.cmdr.model.CommandParameter;
 import org.comroid.util.Bitmask;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -55,25 +56,41 @@ public class CommandManager implements Cmdr {
     @Override
     public final Set<CommandBlob> registerCommands(Class<?>... cls) {
         return Stream.of(cls)
-                .map(this::buildCommandGroup)
+                .flatMap(kls -> buildCommandGroup(null, kls))
                 .peek(cmd -> cmd.names().peek(key -> {
                     if (cmds.containsKey(key))
                         throw new RuntimeException("Duplicate alias: " + key);
                 }).forEach(key -> cmds.put(key, cmd)))
+                .peek(cmd -> log.atFine().log("Registered command %s", cmd))
                 .collect(Collectors.toSet());
     }
 
-    private CommandBlob buildCommandGroup(Class<?> cls) {
+    @Override
+    public final Set<CommandBlob> registerCommands(Object... objs) {
+        return Stream.of(objs)
+                .flatMap(obj -> buildCommandGroup(obj, obj.getClass()))
+                .peek(cmd -> cmd.names().peek(key -> {
+                    if (cmds.containsKey(key))
+                        throw new RuntimeException("Duplicate alias: " + key);
+                }).forEach(key -> cmds.put(key, cmd)))
+                .peek(cmd -> log.atFine().log("Registered command %s", cmd))
+                .collect(Collectors.toSet());
+    }
+
+    private Stream<CommandBlob> buildCommandGroup(@Nullable Object target, Class<?> cls) {
         List<CommandBlob> subcmds = Arrays.stream(cls.getMethods())
                 .filter(mtd -> Bitmask.isFlagSet(mtd.getModifiers(), (Modifier.PUBLIC | Modifier.STATIC)))
                 .filter(mtd -> mtd.isAnnotationPresent(Command.class))
-                .map(this::buildCommandBlob)
+                .map(mtd -> buildCommandBlob(target, mtd))
                 .collect(Collectors.toList());
         Command cmd = cls.getAnnotation(Command.class);
+        if (cmd == null)
+            return subcmds.stream();
         Command.Alias alias = cls.getAnnotation(Command.Alias.class);
         Command.Hidden hidden = cls.getAnnotation(Command.Hidden.class);
         Command.Default defaultCmd = cls.getAnnotation(Command.Default.class);
-        return new CommandBlob(
+        return Stream.of(new CommandBlob(
+                target,
                 null,
                 fallback(cmd.name(), cls::getSimpleName, String::isEmpty, Objects::isNull),
                 fallback(cmd.description(), Rewrapper.empty(), String::isEmpty, Objects::isNull),
@@ -81,10 +98,10 @@ public class CommandManager implements Cmdr {
                 defaultCmd == null ? null : defaultCmd.value(),
                 hidden != null,
                 subcmds
-        );
+        ));
     }
 
-    private CommandBlob buildCommandBlob(Method mtd) {
+    private CommandBlob buildCommandBlob(@Nullable Object target, Method mtd) {
         Command cmd = mtd.getAnnotation(Command.class);
         Command.Alias alias = mtd.getAnnotation(Command.Alias.class);
         Command.Hidden hidden = mtd.getAnnotation(Command.Hidden.class);
@@ -100,6 +117,7 @@ public class CommandManager implements Cmdr {
         params.sort(Comparator.comparingInt(it -> it.ordinal));
 
         return new CommandBlob(
+                target,
                 mtd,
                 fallback(cmd.name(), mtd::getName, String::isEmpty, Objects::isNull),
                 fallback(cmd.description(), Rewrapper.empty(), String::isEmpty, Objects::isNull),
@@ -174,6 +192,6 @@ public class CommandManager implements Cmdr {
 
     @Override
     public void handleResponse(Object o, Object[] extraArgs) {
-        log.at(Level.SEVERE).log("Unhandled response: {0}", o);
+        log.at(Level.SEVERE).log("Unhandled response: %s", o);
     }
 }

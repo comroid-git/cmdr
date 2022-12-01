@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
@@ -42,6 +43,7 @@ public class CommandBlob implements Command {
     }
 
     public CommandBlob(
+            @Nullable Object target,
             @Nullable Method method,
             @NotNull String name,
             @Nullable String description,
@@ -51,7 +53,7 @@ public class CommandBlob implements Command {
             Collection<CommandBlob> subCommands,
             CommandParameter<?>... parameters
     ) {
-        this.delegate = method != null ? Invocable.ofMethodCall(method) : null;
+        this.delegate = method != null ? Invocable.ofMethodCall(target, method) : null;
         this.name = name;
         this.description = description;
         this.aliases = aliases;
@@ -97,5 +99,10 @@ public class CommandBlob implements Command {
             return Arrays.stream(cmd.parameters.get(cmdParts.length - 1 - i[0]).autoCompleteOptions)
                     .map(cmdr::prefixAutofillOption);
         return Stream.empty();
+    }
+
+    @Override
+    public String toString() {
+        return name + " - " + Objects.requireNonNullElse(description, "No description provided");
     }
 }
