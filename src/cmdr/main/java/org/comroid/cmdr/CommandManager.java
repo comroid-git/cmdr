@@ -131,6 +131,10 @@ public class CommandManager implements Cmdr {
         return true;
     }
 
+    public final boolean handle(String cmd) {
+        return executeCommand(this, cmd.split(" "), getExtraArguments().toArray());
+    }
+
     private Object stepIntoCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
         CommandBlob blob;
         int[] i = new int[]{0};
