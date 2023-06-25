@@ -39,8 +39,8 @@ public interface Cmdr extends CommandHandler {
         }
 
         @Override
-        default Object handleThrowable(Throwable t) {
-            return getUnderlyingCmdr().handleThrowable(t);
+        default Object handleThrowable(String[] parts, Throwable t) {
+            return getUnderlyingCmdr().handleThrowable(parts, t);
         }
 
         @Override

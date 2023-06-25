@@ -132,7 +132,7 @@ public class CommandManager implements Cmdr {
         try {
             response = stepIntoCommand(cmdr, cmdParts, extraArgs);
         } catch (Throwable t) {
-            response = cmdr.handleThrowable(Invocable.unwrapInvocationTargetException(t));
+            response = cmdr.handleThrowable(cmdParts, Invocable.unwrapInvocationTargetException(t));
             return false;
         } finally {
             if (response != null)
@@ -152,6 +152,8 @@ public class CommandManager implements Cmdr {
         int[] i = new int[]{0};
         blob = cmds.get(cmdParts[i[0]]);
         blob = extractCommandBlob(blob, cmdParts, i);
+        if (blob == null)
+            return handleInvalidCommand(cmdParts);
         return runCommand(cmdr, blob, Arrays.copyOfRange(cmdParts, i[0], cmdParts.length), extraArgs);
     }
 
@@ -179,23 +181,30 @@ public class CommandManager implements Cmdr {
     }
 
     @Override
-    public Object handleThrowable(Throwable t) {
+    public Object handleThrowable(String[] parts, Throwable t) {
         if (handler != null)
-            return handler.handleThrowable(t);
+            return handler.handleThrowable(parts, t);
         throw new RuntimeException("Unhandled internal Exception", t);
     }
 
     @Override
-    public Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs) {
-        if (handler!= null)
-            return handler.handleInvalidArguments(cmd, gameArgs);
-        throw new RuntimeException("Invalid arguments");
+    public Object handleInvalidCommand(String[] parts) {
+        if (handler != null)
+            return handler.handleInvalidCommand(parts);
+        return "Invalid command: " + String.join(" ", parts);
     }
 
     @Override
-    public void handleResponse(Object o, Object[] extraArgs) {
-        if (handler!= null)
-            handler.handleResponse(o, extraArgs);
+    public Object handleInvalidArguments(CommandBlob cmd, String[] args) {
+        if (handler != null)
+            return handler.handleInvalidArguments(cmd, args);
+        return "Invalid arguments: " + String.join(" ", args);
+    }
+
+    @Override
+    public void handleResponse(Object o, Object[] extra) {
+        if (handler != null)
+            handler.handleResponse(o, extra);
         else log.at(Level.FINE).log("Unhandled response: {0}", o);
     }
 }

@@ -1,9 +1,11 @@
 package org.comroid.cmdr.model;
 
 public interface CommandHandler {
-    Object handleThrowable(Throwable t);
+    Object handleThrowable(String[] parts, Throwable t);
 
-    Object handleInvalidArguments(CommandBlob cmd, String[] userArgs);
+    Object handleInvalidCommand(String[] parts);
 
-    void handleResponse(Object o, Object[] extraArgs);
+    Object handleInvalidArguments(CommandBlob cmd, String[] args);
+
+    void handleResponse(Object o, Object[] extra);
 }

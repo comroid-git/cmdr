@@ -12,10 +12,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
 public class CommandBlob implements Command {
+    public static final String NO_DESCRIPTION = "No description provided";
     private final @Nullable Invocable<?> delegate;
     private final @NotNull String name;
     private final @Nullable String description;
@@ -68,7 +70,7 @@ public class CommandBlob implements Command {
 
     @Override
     public @Nullable String description() {
-        return description;
+        return Objects.requireNonNullElse(description, NO_DESCRIPTION);
     }
 
     public @NotNull @NonNls String[] aliases() {
