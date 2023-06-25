@@ -61,7 +61,11 @@ public class CommandManager implements Cmdr {
     @Override
     public final Set<CommandBlob> registerCommands(Class<?>... cls) {
         return Stream.of(cls)
-                .map(this::buildCommandGroup)
+                .flatMap(kls -> kls.isAnnotationPresent(Command.class)
+                        ? Stream.of(buildCommandGroup(kls))
+                        : Stream.of(kls.getDeclaredMethods())
+                        .filter(mtd -> mtd.isAnnotationPresent(Command.class))
+                        .map(this::buildCommandBlob))
                 .peek(cmd -> cmd.names().peek(key -> {
                     if (cmds.containsKey(key))
                         throw new RuntimeException("Duplicate alias: " + key);
@@ -137,8 +141,10 @@ public class CommandManager implements Cmdr {
         return true;
     }
 
-    public final boolean handle(String cmd) {
-        return executeCommand(this, cmd.split(" "), getExtraArguments().toArray());
+    @Override
+    public final boolean handle(String cmd, Object... extraArgs) {
+        return executeCommand(this, cmd.split(" "),
+                Stream.concat(getExtraArguments(), Stream.of(extraArgs)).toArray());
     }
 
     private Object stepIntoCommand(Cmdr cmdr, String[] cmdParts, Object[] extraArgs) {
@@ -164,7 +170,7 @@ public class CommandManager implements Cmdr {
         if (delegate == null)
             return "Command '" + commandBlob.name() + "' not executable";
         try {
-            return delegate.autoInvoke(Stream.concat(pArgs.stream(), Stream.of(extraArgs)).toArray());
+            return delegate.autoInvoke(Stream.concat(pArgs.stream(), Stream.concat(Stream.of(cmdr), Stream.of(extraArgs))).toArray());
         } catch (IllegalArgumentException t) {
             if (!(t.getCause() instanceof IllegalArgumentException))
                 throw t;

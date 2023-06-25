@@ -52,6 +52,9 @@ allprojects {
         if (findProject(':api') != null)
             api project(':api')
         else 'org.comroid:api:+'
+        if (findProject(':guardian:uniform') != null)
+            api project(':guardian:uniform')
+        else api 'org.comroid:uniform:+'
 
         // compat
         implementation 'com.google.flogger:flogger:+'
@@ -73,12 +76,6 @@ subprojects {
     dependencies {
         if (project.name != 'cmdr')
             api parent
-
-        if (isAutoDeploy) {
-            api 'org.comroid:uniform:0.+'
-        } else {
-            api project(':guardian:uniform')
-        }
 
         compileOnly 'org.jetbrains:annotations:21.+'
         implementation 'com.google.flogger:flogger:0.5.1'

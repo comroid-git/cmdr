@@ -18,6 +18,8 @@ public interface Cmdr extends CommandHandler {
         return option;
     }
 
+    boolean handle(String cmd, Object... extraArgs);
+
     interface Underlying extends Cmdr {
         Cmdr getUnderlyingCmdr();
 
