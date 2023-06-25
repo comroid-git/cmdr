@@ -1,0 +1,17 @@
+apply plugin: 'java-library'
+
+group 'org.comroid'
+version '0.1.1-SNAPSHOT'
+
+if (project.name != 'cmdr')
+    artifactName = 'cmdr-' + project.name
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+dependencies {
+    compileOnly "org.spigotmc:spigot-api:$mcVersion-$spigotRC-SNAPSHOT"
+    runtimeOnly 'com.google.flogger:flogger-log4j2-backend:0.7.4'
+}
+
+apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/publishing.gradle"

@@ -1,0 +1,15 @@
+apply plugin: 'java-library'
+
+group 'org.comroid'
+version '0.0.0-SNAPSHOT'
+
+if (project.name != 'cmdr')
+    artifactName = 'cmdr-' + project.name
+
+dependencies {
+    //compileOnly 'com.discord4j:discord4j-core:3.2.+'
+    runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
+    runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+}
+
+apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/publishing.gradle"

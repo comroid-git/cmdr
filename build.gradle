@@ -3,9 +3,6 @@ buildscript {
     dependencies.classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.1"
 }
 
-apply plugin: 'java-library'
-apply from: 'gradle/vars.gradle'
-
 tasks.findByName('wrapper')?.configure {
     gradleVersion = '7.5'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
@@ -13,89 +10,11 @@ tasks.findByName('wrapper')?.configure {
 
 version '0.1.1-SNAPSHOT'
 
-// stdio implementations
-project('stdio') {
-    apply plugin: 'java-library'
-    apply plugin: 'application'
-    version '0.0.1-SNAPSHOT'
-
-    mainClassName = 'org.comroid.cmdr.stdio.IOCmdr'
-
-    run {
-        standardInput = System.in
-    }
-
-    dependencies {
-        runtimeOnly 'com.google.flogger:flogger-system-backend:0.7.4'
-    }
-}
-
-// spigot implementations
-project('spigot') {
-    apply plugin: 'java-library'
-    version '0.1.1-SNAPSHOT'
-
-    sourceCompatibility = 17
-    targetCompatibility = 17
-
-    dependencies {
-        compileOnly "org.spigotmc:spigot-api:$mcVersion-$spigotRC-SNAPSHOT"
-        runtimeOnly 'com.google.flogger:flogger-log4j2-backend:0.7.4'
-    }
-}
-
-// discord implementations
-project('catnip') {
-    apply plugin: 'java-library'
-    version '0.0.0-SNAPSHOT'
-
-    dependencies {
-        compileOnly 'com.mewna:catnip:3.3.+'
-        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
-        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
-        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
-    }
-}
-project('discord4j') {
-    apply plugin: 'java-library'
-    version '0.0.0-SNAPSHOT'
-
-    dependencies {
-        //compileOnly 'com.discord4j:discord4j-core:3.2.+'
-        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
-        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
-    }
-}
-project('javacord') {
-    apply plugin: 'java-library'
-    version '0.0.0-SNAPSHOT'
-
-    dependencies {
-        compileOnly 'org.javacord:javacord-api:3.5.+'
-        compileOnly 'org.javacord:javacord-core:3.0.4'
-        compileOnly 'org.apache.logging.log4j:log4j-api:2.12.1'
-        runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
-        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
-        runtimeOnly 'com.google.flogger:flogger-log4j2-backend:0.7.4'
-    }
-}
-project('jda') {
-    apply plugin: 'java-library'
-    version '0.0.0-SNAPSHOT'
-
-    dependencies {
-        compileOnly 'net.dv8tion:JDA:5.0.+'
-        runtimeOnly 'org.json:json:20190722'
-        runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
-        runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
-    }
-}
-
 allprojects {
-    group 'org.comroid'
+    apply plugin: 'java-library'
+    apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/vars.gradle"
 
-    if (project.name != 'cmdr')
-        artifactName = 'cmdr-' + project.name
+    group 'org.comroid'
 
     sourceCompatibility = 11
     targetCompatibility = 11
@@ -119,6 +38,10 @@ allprojects {
         test.java.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
         test.resources.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
     }
+}
+
+subprojects {
+    apply plugin: 'java-library'
 
     repositories {
         maven { url 'https://maven.comroid.org' }
@@ -147,6 +70,4 @@ allprojects {
 
         testCompileOnly 'org.codehaus.groovy:groovy:3.0.0-beta-3'
     }
-
-    apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/publishing.gradle"
 }

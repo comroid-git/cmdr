@@ -1,0 +1,16 @@
+apply plugin: 'java-library'
+
+group 'org.comroid'
+version '0.0.0-SNAPSHOT'
+
+if (project.name != 'cmdr')
+    artifactName = 'cmdr-' + project.name
+
+dependencies {
+    compileOnly 'net.dv8tion:JDA:5.0.+'
+    runtimeOnly 'org.json:json:20190722'
+    runtimeOnly 'com.squareup.okhttp3:okhttp:3.14.3'
+    runtimeOnly 'com.google.flogger:flogger-slf4j-backend:0.7.4'
+}
+
+apply from: "${(project.name == 'cmdr' ? project : parent).projectDir}/gradle/publishing.gradle"
