@@ -4,13 +4,11 @@ import com.google.common.flogger.FluentLogger;
 import org.comroid.api.Invocable;
 import org.comroid.api.Rewrapper;
 import org.comroid.api.ValueType;
-import org.comroid.cmdr.model.Cmdr;
-import org.comroid.cmdr.model.Command;
-import org.comroid.cmdr.model.CommandBlob;
-import org.comroid.cmdr.model.CommandParameter;
+import org.comroid.cmdr.model.*;
 import org.comroid.util.Bitmask;
 import org.comroid.util.StandardValueType;
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -25,8 +23,16 @@ import static org.comroid.util.FallbackUtil.fallback;
 
 public class CommandManager implements Cmdr {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
-
     protected final Map<String, CommandBlob> cmds = new ConcurrentHashMap<>();
+    private final @Nullable CommandHandler handler;
+
+    public CommandManager() {
+        this(null);
+    }
+
+    public CommandManager(@Nullable CommandHandler handler) {
+        this.handler = handler;
+    }
 
     @Override
     public final Map<String, CommandBlob> getCommands() {
@@ -168,16 +174,22 @@ public class CommandManager implements Cmdr {
 
     @Override
     public Object handleThrowable(Throwable t) {
+        if (handler != null)
+            return handler.handleThrowable(t);
         throw new RuntimeException("Unhandled internal Exception", t);
     }
 
     @Override
     public Object handleInvalidArguments(CommandBlob cmd, String[] gameArgs) {
+        if (handler!= null)
+            return handler.handleInvalidArguments(cmd, gameArgs);
         throw new RuntimeException("Invalid arguments");
     }
 
     @Override
     public void handleResponse(Object o, Object[] extraArgs) {
-        log.at(Level.SEVERE).log("Unhandled response: {0}", o);
+        if (handler!= null)
+            handler.handleResponse(o, extraArgs);
+        else log.at(Level.FINE).log("Unhandled response: {0}", o);
     }
 }

@@ -38,11 +38,29 @@ allprojects {
         test.java.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
         test.resources.srcDirs = files('' + (project.name == 'cmdr' ? project : parent).projectDir + "/src/$project.name/test/java")
     }
+
+    repositories {
+        maven { url 'https://maven.comroid.org' }
+        mavenLocal()
+        maven { url 'https://www.jitpack.io' }
+        maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+        jcenter()
+        mavenCentral()
+    }
+
+    dependencies {
+        if (findProject(':api') != null)
+            api project(':api')
+        else 'org.comroid:api:+'
+
+        // compat
+        implementation 'com.google.flogger:flogger:+'
+        implementation 'com.google.flogger:flogger-slf4j-backend:+'
+        compileOnly 'org.jetbrains:annotations:+'
+    }
 }
 
 subprojects {
-    apply plugin: 'java-library'
-
     repositories {
         maven { url 'https://maven.comroid.org' }
         mavenLocal()

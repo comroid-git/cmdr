@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public interface Cmdr {
+public interface Cmdr extends CommandHandler {
     String OPTION_PREFIX = "§§";
     String OPTION_OBTAINER_PREFIX = "°";
 
@@ -13,12 +13,6 @@ public interface Cmdr {
     Stream<Object> getExtraArguments();
 
     Set<CommandBlob> registerCommands(Class<?>... cls);
-
-    Object handleThrowable(Throwable t);
-
-    Object handleInvalidArguments(CommandBlob cmd, String[] userArgs);
-
-    void handleResponse(Object o, Object[] extraArgs);
 
     default String prefixAutofillOption(String option) {
         return option;
